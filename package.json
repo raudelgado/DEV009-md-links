@@ -1,0 +1,12 @@
+{
+  "name": "md-links",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=16.x"
+  },
+  "bootcamp": {
+    "createdAt": "2023-06-30T18:48:57.687Z",
+    "version": "6.3.0",
+    "commit": "01edee56d47a145090320e72e4ecbb7241de291e"
+  }
+}
