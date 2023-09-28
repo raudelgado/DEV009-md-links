@@ -1,8 +1,8 @@
 const { mdLinks } = require('./index.js');
 
-mdLinks('./pruebas/README-EXAMPLE.md') // Puedo pasar true o false para habilitar el validate
+mdLinks('./pruebas/README-EXAMPLE.md', true) // Puedo pasar true o false para habilitar el validate
   .then(links => {
-    // => [{ href, text, file }, ...]
+    console.log(links);
   })
   .catch((error) => {
     console.error(error);

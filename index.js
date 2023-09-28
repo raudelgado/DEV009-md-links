@@ -1,92 +1,73 @@
 const fs = require('fs');
 const path = require('path');
-const marked = require('marked');
-const {isMarkdownFile } = require('./function.js');
-const { JSDOM }= require('jsdom');
-const axios = require('axios');
+const {isMarkdownFile, readingFile, validatedLinks } = require('./function.js');
 
-function readingFile(filePath) {
+const mdLinks = (dirFilePath, validate) => {
   return new Promise((resolve, reject) => {
-    fs.readFile(filePath, "utf-8", (err, data) => {
-      if (err) reject(err);
-      const markedLexer = marked.lexer(data);
-      //console.log('markedlexer', marked.parser(markedLexer));
-      const htmlContent = marked.parser(markedLexer);
-      const result = getLinks(dom);
-      result.forEach((item) => (item.file = filePath));
-
-      resolve({ links: result, htmlContent: htmlContent });
-    });
-  });
-};
-
-function getLinks(htmlContent) {
-    const dom = new JSDOM(htmlContent);
-    const document = dom.window.document;
-    const anchorElements = document.querySelectorAll('a');
-    const links = [];
-    anchorElements.forEach((element) => {
-      const href = element.href;
-      const text = element.textContent;
-      links.push({ href, text });
-    });
-  
-    return links;
-}
-
-const mdLinks = (filePath, validate) => {
-  return new Promise((resolve, reject) => {
-    const absolutePath = path.resolve(filePath); //convierte la ruta a absoluta
+    const absolutePath = path.resolve(dirFilePath); //convierte la ruta a absoluta
     if (!fs.existsSync(absolutePath)) {
-      reject('The route doesnt exist');
-    } else if (!path.isAbsolute(absolutePath)) {
-      reject('The provided path is not an absolute path');
-    } else if (!isMarkdownFile(absolutePath)) {
-      reject('Is not a md document');
-    } else {
-      readingFile(absolutePath)
-        .then(data => {
-          // Procesar el contenido del archivo Markdown utilizando markdown-parser
-
-          if (validate) {
-            const validatePromises = links.map((link) => {
-    
-              return axios.head(link.href) // Realiza una solicitud HEAD para verificar el enlace
-                .then((response) => {
-                  if (response.status >= 200 && response.status < 400) {
-                    link.valid = true; // Marca el enlace como válido
-                  } else {
-                    link.valid = false; // Marca el enlace como no válido
-                  }
-                  return link;
-                })
-                .catch((error) => {
-                  link.valid = false; // Marca el enlace como no válido en caso de error
-                  return link;
-                });
-            });
-
-            Promise.all(validatePromises)
-              .then((validatedLinks) => {
-                resolve(validatedLinks);
+      reject('The route does not exist');
+      return;
+    } 
+    if (fs.statSync(absolutePath).isFile()) {
+      if (!isMarkdownFile(absolutePath)) {
+        reject('Is not a md document');
+        return;
+      }   
+        readingFile(absolutePath)
+      .then(data => {
+        // Procesar el contenido del archivo Markdown utilizando markdown-parser
+        //console.log(data, 'array de links');
+        if (validate === true) { //enviar a function como function individual 
+         // console.log(validate)
+            //console.log(validatedLinks(data), 'promesas');
+             validatedLinks(data)
+              .then(promises => resolve(promises))
+        } else {
+          resolve(data);
+        }
+      })
+      .catch((error) => {
+        reject(error);
+      });
+    } else if (fs.statSync(absolutePath).isDirectory()) {
+      // Si es un directorio, procesa todos los archivos .md en ese directorio
+      getMarkdownFiles(absolutePath)
+        .then((mdFiles) => {
+          const promises = mdFiles.map((filePath) => {
+            return readingFile(filePath)
+              .then((data) => {
+                if (validate) {
+                  return validateLinks(data);
+                } else {
+                  return data;
+                }
               })
               .catch((error) => {
-                reject(error);
+                return {
+                  file: filePath,
+                  error: error.message || 'Unknown error',
+                };
               });
-          } else {
-            resolve(links);
-          }
+          });
+
+          Promise.all(promises)
+            .then((results) => {
+              resolve(results.flat());
+            })
+            .catch((error) => {
+              reject(error);
+            });
         })
         .catch((error) => {
           reject(error);
         });
+    } else {
+      reject('Invalid path');
     }
   });
 };
 
-
 module.exports = {
-  mdLinks,
-  isMarkdownFile,
-  readingFile
-};
+  mdLinks
+}
