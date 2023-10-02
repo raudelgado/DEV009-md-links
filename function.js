@@ -3,14 +3,13 @@ const { JSDOM }= require('jsdom');
 const path = require('path');
 const fs = require('fs');
 const axios = require('axios');
-/* const { error } = require('console');
-const { rejects } = require('assert'); */
 
+// Verifica si el archivo es .md
 function isMarkdownFile(filePath) { // pasar a function
     return path.extname(filePath) === '.md';
   }
 
-
+ // Lee el archivo y extrae con marked lexer
   function readingFile(filePath) {
     return new Promise((resolve, reject) => {
       fs.readFile(filePath, "utf-8", (err, data) => {
@@ -26,11 +25,12 @@ function isMarkdownFile(filePath) { // pasar a function
     });
   };
   
+  // retorna los links con el jsdom y el html content
   function getLinks(htmlContent) {
       const dom = new JSDOM(htmlContent);
       const document = dom.window.document;
       const anchorElements = document.querySelectorAll('a');
-      const links = [];
+      const links = []; // se guarda en un array vació
       anchorElements.forEach((element) => {
         const href = element.href;
         const text = element.textContent;
@@ -40,7 +40,7 @@ function isMarkdownFile(filePath) { // pasar a function
       return links;
   }
 
-
+  // Aquí valido si mis links son true (then / if) or false catch
   const validatedLinks = (data) => {
     const validatePromises = data.map((link) => {
       return axios.get(link.href) // Realiza una solicitud HEAD para verificar el enlace
@@ -81,27 +81,22 @@ function isMarkdownFile(filePath) { // pasar a function
   return Promise.all(validatePromises);  
 }
 
+// función para leer los directorios
 function getMarkdownFiles(directoryPath) {
   return new Promise((resolve, reject) => {
     const absoluteDirectoryPath = path.resolve(directoryPath);
-
+    const directory = fs.readdirSync(directoryPath);
     if (!fs.existsSync(absoluteDirectoryPath)) {
       reject('The directory does not exist');
       return;
     }
-
-    fs.readdir(absoluteDirectoryPath, (err, files) => {
-      if (err) {
-        reject(err);
-        return;
-      }
-
-      const mdFiles = files.filter((file) => path.extname(file) === '.md');
-      const mdFilePaths = mdFiles.map((mdFile) => path.join(absoluteDirectoryPath, mdFile));
-      resolve(mdFilePaths);
-    });
-  });
+    const mdFiles = directory.filter((file) => path.extname(file) === '.md');
+    const mdFilePaths = mdFiles.map((mdFile) => path.join(absoluteDirectoryPath, mdFile));
+    console.log(mdFilePaths, 'array');
+    resolve(mdFilePaths);
+  })
 }
+
 
   module.exports = {
     isMarkdownFile, 
