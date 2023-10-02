@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const {isMarkdownFile, readingFile, validatedLinks } = require('./function.js');
+const {isMarkdownFile, readingFile, validatedLinks, getMarkdownFiles } = require('./function.js');
 
 const mdLinks = (dirFilePath, validate) => {
   return new Promise((resolve, reject) => {
@@ -16,11 +16,7 @@ const mdLinks = (dirFilePath, validate) => {
       }   
         readingFile(absolutePath)
       .then(data => {
-        // Procesar el contenido del archivo Markdown utilizando markdown-parser
-        //console.log(data, 'array de links');
         if (validate === true) { //enviar a function como function individual 
-         // console.log(validate)
-            //console.log(validatedLinks(data), 'promesas');
              validatedLinks(data)
               .then(promises => resolve(promises))
         } else {
@@ -38,7 +34,7 @@ const mdLinks = (dirFilePath, validate) => {
             return readingFile(filePath)
               .then((data) => {
                 if (validate) {
-                  return validateLinks(data);
+                  return validatedLinks(data);
                 } else {
                   return data;
                 }

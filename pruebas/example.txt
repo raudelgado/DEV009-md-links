@@ -1,0 +1,4 @@
+Este es un archivo de texto de ejemplo.
+Puedes escribir cualquier cosa que desees en él.
+Es un formato de archivo simple y ampliamente compatible.
+
