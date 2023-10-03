@@ -16,6 +16,7 @@ const mdLinks = (dirFilePath, validate) => {
       }   
         readingFile(absolutePath)
       .then(data => {
+      
         if (validate === true) { //enviar a function como function individual 
              validatedLinks(data)
               .then(promises => resolve(promises))
