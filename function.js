@@ -42,7 +42,6 @@ function isMarkdownFile(filePath) { // pasar a function
 
   // Aquí valido si mis links son true (then / if) or false catch
    const validatedLinks = (data) => {
-
     const validatePromises = data.map((link) => {
       return axios.get(link.href)  // Realiza una solicitud HEAD para verificar el enlace
         .then((response) => {
